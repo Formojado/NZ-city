@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NZ SCANNER: ELITE EDITION</title>
+  <title>NZ SCANNER: ULTIMATE</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
@@ -11,66 +11,44 @@
     html, body { height: 100%; margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: #fff; overflow: hidden; }
     #map { height: 100vh; width: 100vw; z-index: 1; background: #f0f0f0; }
 
-    /* 頂部題目區：縮小化以釋放地圖空間 */
+    /* 頂部題目區 */
     .header-ui { position: absolute; top: 0; left: 0; width: 100%; height: 180px; z-index: 1001; pointer-events: none; display: flex; justify-content: center; }
     .viewport { position: relative; width: 100%; height: 180px; overflow: hidden; display: flex; justify-content: center; }
     .belt { display: flex; position: absolute; left: 50%; top: 20px; transform: translateX(-50%); transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1); }
-    
     .city-card { 
-        width: 200px; padding: 15px; margin: 0 12px; background: #fff; 
-        border: 4px solid var(--nz-slate); border-radius: 18px; opacity: 0.15; transform: scale(0.8); transition: 0.5s;
-        display: flex; align-items: center; justify-content: center;
-        flex-shrink: 0; box-shadow: 6px 6px 0px var(--nz-slate);
+        width: 200px; padding: 15px; margin: 0 12px; background: #fff; border: 4px solid var(--nz-slate); 
+        border-radius: 18px; opacity: 0.15; transform: scale(0.8); transition: 0.5s;
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 6px 6px 0px var(--nz-slate);
     }
     .city-card.active { opacity: 1; transform: scale(1.0); box-shadow: 10px 10px 0px var(--nz-green); }
-    .city-name-en { font-size: 1.5rem; font-weight: 900; color: #000; text-align: center; line-height: 1.2; }
+    .city-name-en { font-size: 1.5rem; font-weight: 900; color: #000; text-align: center; }
 
-    /* 穩定標記點 CSS */
-    .stable-dot {
-        width: 24px !important; height: 24px !important;
-        border-radius: 50%; border: 4px solid var(--nz-slate);
-        box-sizing: border-box; background: #fff;
-    }
+    /* 標記點樣式 */
+    .stable-dot { width: 24px !important; height: 24px !important; border-radius: 50%; border: 4px solid var(--nz-slate); box-sizing: border-box; background: #fff; }
     .dot-target { background: var(--nz-gold); }
 
-    /* 左下角：分數與進度面板 */
-    .stats-panel { 
-        position: absolute; bottom: 30px; left: 30px; z-index: 1002; background: #fff; 
-        padding: 12px 25px; border: 4px solid var(--nz-slate); border-radius: 12px; 
-        box-shadow: 8px 8px 0px var(--nz-slate);
-    }
-    .stats-score { font-size: 1.3rem; font-weight: 900; color: #000; border-bottom: 2px solid #eee; padding-bottom: 5px; margin-bottom: 5px; }
+    /* UI 面板 */
+    .stats-panel { position: absolute; bottom: 30px; left: 30px; z-index: 1002; background: #fff; padding: 12px 25px; border: 4px solid var(--nz-slate); border-radius: 12px; box-shadow: 8px 8px 0px var(--nz-slate); }
+    .stats-score { font-size: 1.3rem; font-weight: 900; border-bottom: 2px solid #eee; padding-bottom: 5px; margin-bottom: 5px; }
     .stats-progress { font-size: 1.1rem; font-weight: 900; color: var(--nz-green); }
 
-    /* 右下角：對稱的操作按鈕 */
     .control-layer { position: absolute; bottom: 30px; right: 30px; z-index: 1005; }
-    .btn { 
-        padding: 15px 40px; font-size: 1.2rem; font-weight: 900; cursor: pointer; 
-        border-radius: 15px; border: 4px solid var(--nz-slate); color: #fff; display: none; 
-        box-shadow: 8px 8px 0px var(--nz-slate); transition: 0.1s;
-    }
-    .btn:active { transform: translate(2px, 2px); box-shadow: 4px 4px 0px var(--nz-slate); }
+    .btn { padding: 15px 40px; font-size: 1.2rem; font-weight: 900; cursor: pointer; border-radius: 15px; border: 4px solid var(--nz-slate); color: #fff; display: none; box-shadow: 8px 8px 0px var(--nz-slate); }
     #confirmBtn { background: var(--nz-green); }
     #nextBtn { background: var(--nz-slate); }
 
-    /* 開始畫面 */
     .modal-overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 2000; background: linear-gradient(135deg, #e8f5e9 0%, #fff 50%, #c8e6c9 100%); }
-    .start-box { text-align: center; border: 10px solid var(--nz-slate); padding: 50px; background: #fff; width: 420px; border-radius: 40px; box-shadow: 20px 20px 0px rgba(0,0,0,0.05); }
+    .start-box { text-align: center; border: 10px solid var(--nz-slate); padding: 50px; background: #fff; width: 420px; border-radius: 40px; }
   </style>
 </head>
 <body>
   <div id="map"></div>
   <div class="header-ui"><div class="viewport"><div class="belt" id="belt"></div></div></div>
-  
   <div class="stats-panel" id="statsPanel" style="display:none">
     <div class="stats-score" id="score">SCORE: 0</div>
     <div class="stats-progress">MISSION: <span id="progress">0</span> / <span id="total">0</span></div>
   </div>
-
-  <div class="control-layer">
-    <button class="btn" id="confirmBtn">CONFIRM</button>
-    <button class="btn" id="nextBtn">NEXT ❯</button>
-  </div>
+  <div class="control-layer"><button class="btn" id="confirmBtn">CONFIRM</button><button class="btn" id="nextBtn">NEXT ❯</button></div>
 
   <div id="startModal" class="modal-overlay">
     <div class="start-box">
@@ -83,25 +61,22 @@
 
   <script>
     const DB = [
-        // Priority 1: Major Cities (20)
+        // P1: Major Cities (20)
         {en:"Auckland", p:1, coords:[-36.8485, 174.7633]}, {en:"Wellington", p:1, coords:[-41.2865, 174.7762]}, {en:"Christchurch", p:1, coords:[-43.5321, 172.6362]}, {en:"Hamilton", p:1, coords:[-37.7870, 175.2793]}, {en:"Dunedin", p:1, coords:[-45.8788, 170.5028]}, {en:"Tauranga", p:1, coords:[-37.6878, 176.1651]}, {en:"Lower Hutt", p:1, coords:[-41.2092, 174.9081]}, {en:"Palmerston North", p:1, coords:[-40.3523, 175.6082]}, {en:"Napier", p:1, coords:[-39.4928, 176.9120]}, {en:"Hastings", p:1, coords:[-39.6395, 176.8392]}, {en:"Nelson", p:1, coords:[-41.2706, 173.2840]}, {en:"New Plymouth", p:1, coords:[-39.0556, 174.0742]}, {en:"Rotorua", p:1, coords:[-38.1368, 176.2497]}, {en:"Whangarei", p:1, coords:[-35.7275, 174.3236]}, {en:"Invercargill", p:1, coords:[-46.4131, 168.3538]}, {en:"Whanganui", p:1, coords:[-39.9333, 175.0500]}, {en:"Gisborne", p:1, coords:[-38.6625, 178.0178]}, {en:"Upper Hutt", p:1, coords:[-41.1244, 175.0708]}, {en:"Timaru", p:1, coords:[-44.3958, 171.2425]}, {en:"Blenheim", p:1, coords:[-41.5160, 173.9528]},
-        // Priority 2: Large Towns (40)
+        // P2: Large Towns (40)
         {en:"Queenstown", p:2, coords:[-45.0312, 168.6626]}, {en:"Taupo", p:2, coords:[-38.6857, 176.0702]}, {en:"Wanaka", p:2, coords:[-44.7032, 169.1321]}, {en:"Cambridge", p:2, coords:[-37.8922, 175.4719]}, {en:"Levin", p:2, coords:[-40.6219, 175.2858]}, {en:"Feilding", p:2, coords:[-40.2250, 175.5640]}, {en:"Rolleston", p:2, coords:[-43.5910, 172.3780]}, {en:"Richmond", p:2, coords:[-41.3364, 173.1817]}, {en:"Masterton", p:2, coords:[-40.9511, 175.6575]}, {en:"Ashburton", p:2, coords:[-43.9011, 171.7478]}, {en:"Whakatane", p:2, coords:[-37.9530, 176.9850]}, {en:"Te Awamutu", p:2, coords:[-38.0083, 175.3225]}, {en:"Gore", p:2, coords:[-46.1028, 168.9442]}, {en:"Oamaru", p:2, coords:[-45.0975, 170.9692]}, {en:"Pukekohe", p:2, coords:[-37.1906, 174.9031]}, {en:"Greymouth", p:2, coords:[-42.4511, 171.2069]}, {en:"Motueka", p:2, coords:[-41.1083, 173.0125]}, {en:"Thames", p:2, coords:[-37.1383, 175.5400]}, {en:"Kawerau", p:2, coords:[-38.0833, 176.7000]}, {en:"Waitakere", p:2, coords:[-36.8500, 174.5500]}, {en:"Kaitaia", p:2, coords:[-35.1125, 173.2625]}, {en:"Kerikeri", p:2, coords:[-35.2264, 173.9514]}, {en:"Paihia", p:2, coords:[-35.2822, 174.0908]}, {en:"Dargaville", p:2, coords:[-35.9333, 173.8833]}, {en:"Huntly", p:2, coords:[-37.5583, 175.1583]}, {en:"Matamata", p:2, coords:[-37.8130, 175.7725]}, {en:"Morrinsville", p:2, coords:[-37.6583, 175.5250]}, {en:"Tokoroa", p:2, coords:[-38.2250, 175.8719]}, {en:"Te Kuiti", p:2, coords:[-38.3333, 175.1333]}, {en:"Turangi", p:2, coords:[-38.9833, 175.8083]}, {en:"Te Puke", p:2, coords:[-37.7833, 176.3167]}, {en:"Opotiki", p:2, coords:[-38.0083, 177.2861]}, {en:"Stratford", p:2, coords:[-39.3333, 174.2833]}, {en:"Hawera", p:2, coords:[-39.5917, 174.2833]}, {en:"Marton", p:2, coords:[-40.0667, 175.3833]}, {en:"Taihape", p:2, coords:[-39.6764, 175.7964]}, {en:"Dannevirke", p:2, coords:[-40.2083, 176.0958]}, {en:"Carterton", p:2, coords:[-41.0211, 175.5253]}, {en:"Hokitika", p:2, coords:[-42.7167, 170.9667]}, {en:"Westport", p:2, coords:[-41.7550, 171.6031]},
-        // Priority 3: Small Gems & Local Towns (50)
-        {en:"Milford Sound", p:3, coords:[-44.6414, 167.8974]}, {en:"Franz Josef", p:3, coords:[-43.3878, 170.1818]}, {en:"Fox Glacier", p:3, coords:[-43.4647, 170.0178]}, {en:"Tekapo", p:3, coords:[-44.0044, 170.4771]}, {en:"Mount Cook Village", p:3, coords:[-43.7361, 170.0928]}, {en:"Akaroa", p:3, coords:[-43.8033, 172.9683]}, {en:"Hanmer Springs", p:3, coords:[-42.5222, 172.8286]}, {en:"Kaikoura", p:3, coords:[-42.4000, 173.6814]}, {en:"Picton", p:3, coords:[-41.2897, 174.0061]}, {en:"Te Anau", p:3, coords:[-45.4167, 167.7167]}, {en:"Bluff", p:3, coords:[-46.6000, 168.3333]}, {en:"Oban", p:3, coords:[-46.8978, 168.1278]}, {en:"Russell", p:3, coords:[-35.2625, 174.1214]}, {en:"Haast", p:3, coords:[-43.8806, 169.0417]}, {en:"Arrowtown", p:3, coords:[-44.9425, 168.8358]}, {en:"Glenorchy", p:3, coords:[-44.8500, 168.3833]}, {en:"Raglan", p:3, coords:[-37.8000, 174.8833]}, {en:"Coromandel", p:3, coords:[-36.7617, 175.4967]}, {en:"Whangamata", p:3, coords:[-37.2100, 175.8750]}, {en:"Waitomo Caves", p:3, coords:[-38.2608, 175.1031]}, {en:"Twizel", p:3, coords:[-44.2583, 170.1000]}, {en:"Fairlie", p:3, coords:[-44.1000, 170.8333]}, {en:"Geraldine", p:3, coords:[-44.0931, 171.2436]}, {en:"Waimate", p:3, coords:[-44.7333, 171.0500]}, {en:"Cromwell", p:3, coords:[-45.0333, 169.2000]}, {en:"Alexandra", p:3, coords:[-45.2492, 169.3797]}, {en:"Ranfurly", p:3, coords:[-45.1333, 170.1000]}, {en:"Balclutha", p:3, coords:[-46.2417, 169.7361]}, {en:"Milton", p:3, coords:[-46.1167, 169.9667]}, {en:"Wyndham", p:3, coords:[-46.3333, 168.8500]}, {en:"Riverton", p:3, coords:[-46.3500, 168.0167]}, {en:"Winton", p:3, coords:[-46.1425, 168.3244]}, {en:"Lumsden", p:3, coords:[-45.7333, 168.4500]}, {en:"Reefton", p:3, coords:[-42.1167, 171.8667]}, {en:"Murchison", p:3, coords:[-41.8000, 172.3333]}, {en:"Methven", p:3, coords:[-43.6333, 171.6500]}, {en:"Darfield", p:3, coords:[-43.4833, 172.1167]}, {en:"Lincoln", p:3, coords:[-43.6403, 172.4867]}, {en:"Amberley", p:3, coords:[-43.1500, 172.7333]}, {en:"Culverden", p:3, coords:[-42.7833, 172.8500]}, {en:"Cheviot", p:3, coords:[-42.8167, 173.2667]}, {en:"Renwick", p:3, coords:[-41.5167, 173.8333]}, {en:"Havelock", p:3, coords:[-41.2833, 173.7667]}, {en:"Golden Bay", p:3, coords:[-40.8167, 172.8167]}, {en:"Takaka", p:3, coords:[-40.8500, 172.8000]}, {en:"Collingwood", p:3, coords:[-40.6833, 172.6833]}, {en:"Murupara", p:3, coords:[-38.4500, 176.7000]}, {en:"Raetihi", p:3, coords:[-39.4333, 175.2833]}, {en:"Ohakune", p:3, coords:[-39.4167, 175.4000]}, {en:"Waiouru", p:3, coords:[-39.4667, 175.6667]}
+        // P3: Small Gems (50)
+        {en:"Milford Sound", p:3, coords:[-44.6414, 167.8974]}, {en:"Franz Josef", p:3, coords:[-43.3878, 170.1818]}, {en:"Fox Glacier", p:3, coords:[-43.4647, 170.0178]}, {en:"Tekapo", p:3, coords:[-44.0044, 170.4771]}, {en:"Mount Cook", p:3, coords:[-43.7361, 170.0928]}, {en:"Akaroa", p:3, coords:[-43.8033, 172.9683]}, {en:"Hanmer Springs", p:3, coords:[-42.5222, 172.8286]}, {en:"Kaikoura", p:3, coords:[-42.4000, 173.6814]}, {en:"Picton", p:3, coords:[-41.2897, 174.0061]}, {en:"Te Anau", p:3, coords:[-45.4167, 167.7167]}, {en:"Bluff", p:3, coords:[-46.6000, 168.3333]}, {en:"Oban", p:3, coords:[-46.8978, 168.1278]}, {en:"Russell", p:3, coords:[-35.2625, 174.1214]}, {en:"Haast", p:3, coords:[-43.8806, 169.0417]}, {en:"Arrowtown", p:3, coords:[-44.9425, 168.8358]}, {en:"Glenorchy", p:3, coords:[-44.8500, 168.3833]}, {en:"Raglan", p:3, coords:[-37.8000, 174.8833]}, {en:"Coromandel", p:3, coords:[-36.7617, 175.4967]}, {en:"Whangamata", p:3, coords:[-37.2100, 175.8750]}, {en:"Waitomo Caves", p:3, coords:[-38.2608, 175.1031]}, {en:"Twizel", p:3, coords:[-44.2583, 170.1000]}, {en:"Fairlie", p:3, coords:[-44.1000, 170.8333]}, {en:"Geraldine", p:3, coords:[-44.0931, 171.2436]}, {en:"Waimate", p:3, coords:[-44.7333, 171.0500]}, {en:"Cromwell", p:3, coords:[-45.0333, 169.2000]}, {en:"Alexandra", p:3, coords:[-45.2492, 169.3797]}, {en:"Ranfurly", p:3, coords:[-45.1333, 170.1000]}, {en:"Balclutha", p:3, coords:[-46.2417, 169.7361]}, {en:"Milton", p:3, coords:[-46.1167, 169.9667]}, {en:"Wyndham", p:3, coords:[-46.3333, 168.8500]}, {en:"Riverton", p:3, coords:[-46.3500, 168.0167]}, {en:"Winton", p:3, coords:[-46.1425, 168.3244]}, {en:"Lumsden", p:3, coords:[-45.7333, 168.4500]}, {en:"Reefton", p:3, coords:[-42.1167, 171.8667]}, {en:"Murchison", p:3, coords:[-41.8000, 172.3333]}, {en:"Methven", p:3, coords:[-43.6333, 171.6500]}, {en:"Darfield", p:3, coords:[-43.4833, 172.1167]}, {en:"Lincoln", p:3, coords:[-43.6403, 172.4867]}, {en:"Amberley", p:3, coords:[-43.1500, 172.7333]}, {en:"Culverden", p:3, coords:[-42.7833, 172.8500]}, {en:"Cheviot", p:3, coords:[-42.8167, 173.2667]}, {en:"Renwick", p:3, coords:[-41.5167, 173.8333]}, {en:"Havelock", p:3, coords:[-41.2833, 173.7667]}, {en:"Golden Bay", p:3, coords:[-40.8167, 172.8167]}, {en:"Takaka", p:3, coords:[-40.8500, 172.8000]}, {en:"Collingwood", p:3, coords:[-40.6833, 172.6833]}, {en:"Murupara", p:3, coords:[-38.4500, 176.7000]}, {en:"Raetihi", p:3, coords:[-39.4333, 175.2833]}, {en:"Ohakune", p:3, coords:[-39.4167, 175.4000]}, {en:"Waiouru", p:3, coords:[-39.4667, 175.6667]}
     ];
 
     let cities=[], idx=0, score=0, currentClick=null, isAnswered=false;
     let pMarker=null, tMarker=null, line=null;
 
-    // 【GeoGuessr 式平滑地圖初始化】
+    // 【高效率平滑地圖】
     const map = L.map('map', {
-        zoomControl: false,
-        attributionControl: false,
-        zoomSnap: 0.1,            // 平滑縮放核心
-        zoomDelta: 0.5,
-        wheelPxPerZoomLevel: 120, // 限制縮放速度
-        wheelDebounceTime: 40
+        zoomControl: false, attributionControl: false,
+        zoomSnap: 0.1, zoomDelta: 1,
+        wheelPxPerZoomLevel: 60, wheelDebounceTime: 20
     }).setView([-40.9, 174.8], 6);
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
@@ -112,11 +87,9 @@
         const num = parseInt(document.getElementById('citySlider').value);
         let pool = [...DB].sort((a,b) => a.p - b.p).slice(0, Math.max(num, 15));
         cities = pool.sort(() => Math.random() - 0.5).slice(0, num);
-        
         document.getElementById('startModal').style.display = 'none';
         document.getElementById('statsPanel').style.display = 'block';
         document.getElementById('total').innerText = cities.length;
-
         const belt = document.getElementById('belt');
         belt.innerHTML = cities.map(c => `<div class="city-card"><div class="city-name-en">${c.en}</div></div>`).join('');
         refreshRound();
@@ -128,12 +101,10 @@
         document.getElementById('confirmBtn').style.display = 'none';
         document.getElementById('nextBtn').style.display = 'none';
         document.getElementById('progress').innerText = idx + 1;
-        
         const cards = document.querySelectorAll('.city-card');
         cards.forEach(c => c.classList.remove('active'));
         const activeCard = cards[idx];
         activeCard.classList.add('active');
-        
         const offset = activeCard.offsetLeft + (activeCard.offsetWidth / 2);
         document.getElementById('belt').style.transform = `translateX(${-offset}px)`;
         map.flyTo([-40.9, 174.8], 6);
@@ -143,8 +114,6 @@
         if(isAnswered) return;
         currentClick = e.latlng;
         if(pMarker) map.removeLayer(pMarker);
-        
-        // 精確對齊圓心的標記
         const playerIcon = L.divIcon({ className: 'stable-dot', iconSize: [24, 24], iconAnchor: [12, 12] });
         pMarker = L.marker(e.latlng, { icon: playerIcon }).addTo(map);
         document.getElementById('confirmBtn').style.display = 'block';
@@ -156,22 +125,13 @@
         const target = cities[idx];
         const dist = map.distance(currentClick, target.coords) / 1000;
         const pts = Math.round(5000 * Math.pow(Math.E, -dist / 150));
-        
-        // 絲滑飛越到目標
-        map.flyTo(target.coords, 9, { duration: 1.5, easeLinearity: 0.25 });
-
-        // 等地圖飛越結束後，再精確繪製線段與目標點，消除跳動感
+        map.flyTo(target.coords, 9, { duration: 1.2 });
         map.once('moveend', () => {
             const targetIcon = L.divIcon({ className: 'stable-dot dot-target', iconSize: [24, 24], iconAnchor: [12, 12] });
             tMarker = L.marker(target.coords, { icon: targetIcon }).addTo(map);
-            
-            line = L.polyline([currentClick, target.coords], {
-                color: '#2D5A27', weight: 4, dashArray: '10, 10', opacity: 0.8
-            }).addTo(map);
-            
+            line = L.polyline([currentClick, target.coords], { color: '#2D5A27', weight: 4, dashArray: '10, 10', opacity: 0.8 }).addTo(map);
             document.getElementById('nextBtn').style.display = 'block';
         });
-
         score += pts;
         document.getElementById('score').innerText = `SCORE: ${score}`;
     }
@@ -179,15 +139,6 @@
     document.getElementById('startBtn').onclick = startMission;
     document.getElementById('confirmBtn').onclick = handleConfirm;
     document.getElementById('nextBtn').onclick = () => { idx++; if(idx < cities.length) refreshRound(); else location.reload(); };
-
-    // 鍵盤支援：空白鍵快速操作
-    window.addEventListener('keydown', e => { 
-        if(e.code === 'Space') { 
-            e.preventDefault(); 
-            if(document.getElementById('nextBtn').style.display === 'block') document.getElementById('nextBtn').click();
-            else if(document.getElementById('confirmBtn').style.display === 'block') handleConfirm();
-        } 
-    });
   </script>
 </body>
 </html>
