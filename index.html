@@ -3,87 +3,103 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NZ SCANNER: LABELED EDITION</title>
+  <title>NZ SCANNER: CLEAN & BALANCED</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
-    :root { --nz-green: #2D5A27; --nz-fern: #4F7942; --nz-slate: #2F4F4F; }
-    html, body { height: 100%; margin: 0; font-family: 'Segoe UI', sans-serif; background: #fdfdfd; overflow: hidden; }
+    :root { --nz-green: #2D5A27; --nz-gold: #E6B325; --nz-slate: #2F4F4F; }
+    html, body { height: 100%; margin: 0; font-family: 'Segoe UI', Roboto, sans-serif; background: #fff; overflow: hidden; }
     #map { height: 100vh; width: 100vw; z-index: 1; }
 
-    /* UI 頂部置中容器 */
-    .header-ui { position: absolute; top: 0; left: 0; width: 100%; height: 320px; z-index: 1001; pointer-events: none; display: flex; justify-content: center; }
-    .viewport { position: relative; width: 100%; height: 320px; overflow: hidden; display: flex; justify-content: center; }
-    .belt { display: flex; position: absolute; left: 50%; top: 40px; transform: translateX(-50%); transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1); }
+    /* 頂部縮小化 */
+    .header-ui { position: absolute; top: 0; left: 0; width: 100%; height: 220px; z-index: 1001; pointer-events: none; display: flex; justify-content: center; }
+    .viewport { position: relative; width: 100%; height: 220px; overflow: hidden; display: flex; justify-content: center; }
+    .belt { display: flex; position: absolute; left: 50%; top: 25px; transform: translateX(-50%); transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1); }
     
-    /* 卡片設計 */
     .city-card { 
-        width: 280px; padding: 30px; margin: 0 20px; background: #fff; 
-        border: 6px solid var(--nz-slate); border-radius: 24px; opacity: 0.1; transform: scale(0.85); transition: 0.5s;
+        width: 220px; padding: 20px; margin: 0 15px; background: #fff; 
+        border: 4px solid var(--nz-slate); border-radius: 20px; opacity: 0.1; transform: scale(0.8); transition: 0.5s;
         display: flex; flex-direction: column; align-items: center; justify-content: center;
-        flex-shrink: 0; box-shadow: 12px 12px 0px var(--nz-slate); position: relative; overflow: hidden;
+        flex-shrink: 0; box-shadow: 8px 8px 0px var(--nz-slate); position: relative;
     }
-    .city-card.active { opacity: 1; transform: scale(1.1); box-shadow: 15px 15px 0px var(--nz-green); }
+    .city-card.active { opacity: 1; transform: scale(1.0); box-shadow: 12px 12px 0px var(--nz-green); }
 
-    .koru-svg { width: 160px; height: 160px; position: absolute; opacity: 0.08; z-index: 0; top: 50%; left: 50%; transform: translate(-50%, -50%); }
-    .city-name-en { font-size: 2.2rem; font-weight: 900; color: #000; z-index: 2; margin: 0; text-align: center; }
-    .city-region { font-size: 1.1rem; color: var(--nz-fern); font-weight: bold; z-index: 2; text-transform: uppercase; letter-spacing: 1px; }
+    .koru-svg { width: 120px; height: 120px; position: absolute; opacity: 0.08; z-index: 0; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+    .city-name-en { font-size: 1.8rem; font-weight: 900; color: #000; z-index: 2; text-align: center; }
 
+    /* 左下角：分數與進度 (優化對比) */
     .stats-panel { 
         position: absolute; bottom: 30px; left: 30px; z-index: 1002; background: #fff; 
-        padding: 15px 35px; border: 5px solid var(--nz-slate); border-radius: 15px; box-shadow: 10px 10px 0px var(--nz-slate);
-        font-weight: 900; font-size: 1.2rem;
+        padding: 12px 25px; border: 4px solid var(--nz-slate); border-radius: 12px; 
+        box-shadow: 8px 8px 0px var(--nz-slate); display: flex; flex-direction: column; gap: 5px;
     }
+    .stats-score { font-size: 1.3rem; font-weight: 900; color: #000; border-bottom: 2px solid #eee; padding-bottom: 5px; }
+    .stats-progress { font-size: 1.1rem; font-weight: 900; color: var(--nz-green); }
 
-    .control-layer { position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); z-index: 1005; }
-    .btn { padding: 20px 60px; font-size: 1.6rem; font-weight: 900; cursor: pointer; border-radius: 25px; border: 5px solid var(--nz-slate); color: #fff; display: none; box-shadow: 8px 8px 0px var(--nz-slate); }
+    /* 右下角：送出按鈕 (與左下角對稱) */
+    .control-layer { position: absolute; bottom: 30px; right: 30px; z-index: 1005; }
+    .btn { 
+        padding: 15px 40px; font-size: 1.2rem; font-weight: 900; cursor: pointer; 
+        border-radius: 15px; border: 4px solid var(--nz-slate); color: #fff; display: none; 
+        box-shadow: 8px 8px 0px var(--nz-slate); transition: 0.2s;
+    }
+    .btn:active { transform: translate(4px, 4px); box-shadow: 4px 4px 0px var(--nz-slate); }
     #confirmBtn { background: var(--nz-green); }
     #nextBtn { background: var(--nz-slate); }
 
+    /* 開頭畫面 */
     .modal-overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 2000; background: linear-gradient(135deg, #e8f5e9 0%, #fff 50%, #c8e6c9 100%); }
-    .start-box { text-align: center; border: 12px solid var(--nz-slate); padding: 60px; background: #fff; width: 500px; border-radius: 50px; box-shadow: 40px 40px 0px rgba(47, 79, 79, 0.2); }
+    .start-box { text-align: center; border: 10px solid var(--nz-slate); padding: 50px; background: #fff; width: 450px; border-radius: 40px; box-shadow: 30px 30px 0px rgba(47, 79, 79, 0.15); }
   </style>
 </head>
 <body>
   <div id="map"></div>
   <div class="header-ui"><div class="viewport"><div class="belt" id="belt"></div></div></div>
-  <div class="stats-panel" id="statsPanel" style="display:none"><div id="score">SCORE: 0</div><div style="color: var(--nz-green);"><span id="progress">0</span> / <span id="total">0</span></div></div>
-  <div class="control-layer"><button class="btn" id="confirmBtn">CONFIRM TARGET</button><button class="btn" id="nextBtn">NEXT MISSION</button></div>
+  
+  <div class="stats-panel" id="statsPanel" style="display:none">
+    <div class="stats-score" id="score">SCORE: 0</div>
+    <div class="stats-progress">MISSION: <span id="progress">0</span> / <span id="total">0</span></div>
+  </div>
+
+  <div class="control-layer">
+    <button class="btn" id="confirmBtn">CONFIRM</button>
+    <button class="btn" id="nextBtn">NEXT ❯</button>
+  </div>
 
   <div id="startModal" class="modal-overlay">
     <div class="start-box">
-      <h1 style="font-size: 3rem; font-weight: 900; color: var(--nz-slate); margin:0;">NZ SCANNER</h1>
-      <div id="countDisplay" style="font-size: 9rem; font-weight: 900; margin: 10px 0; color: var(--nz-slate);">100</div>
+      <h1 style="font-size: 2.8rem; font-weight: 900; color: var(--nz-slate); margin:0;">NZ SCANNER</h1>
+      <div id="countDisplay" style="font-size: 8rem; font-weight: 900; margin: 10px 0; color: var(--nz-slate);">100</div>
       <input type="range" id="citySlider" min="5" max="100" value="100" style="width:100%; accent-color: var(--nz-green); margin-bottom: 20px;">
-      <button id="startBtn" style="width:100%; padding:25px; background:var(--nz-green); color:#fff; font-weight:900; border:5px solid var(--nz-slate); border-radius:20px; cursor:pointer; font-size:1.8rem;">START EXPLORING</button>
+      <button id="startBtn" style="width:100%; padding:20px; background:var(--nz-green); color:#fff; font-weight:900; border:4px solid var(--nz-slate); border-radius:15px; cursor:pointer; font-size:1.6rem;">START MISSION</button>
     </div>
   </div>
 
   <script>
-    // 擴充資料庫 (示意包含觀光點與主要城市)
     const DB = [
-        {en:"Auckland", region:"Auckland", p:1, coords:[-36.8485, 174.7633]},
-        {en:"Wellington", region:"Wellington", p:1, coords:[-41.2865, 174.7762]},
-        {en:"Christchurch", region:"Canterbury", p:1, coords:[-43.5321, 172.6362]},
-        {en:"Queenstown", region:"Otago", p:2, coords:[-45.0312, 168.6626]},
-        {en:"Rotorua", region:"Bay of Plenty", p:2, coords:[-38.1368, 176.2497]},
-        {en:"Hobbiton (Matamata)", region:"Waikato", p:3, coords:[-37.8130, 175.7725]},
-        {en:"Milford Sound", region:"Southland", p:3, coords:[-44.6414, 167.8974]},
-        {en:"Taupo", region:"Waikato", p:2, coords:[-38.6857, 176.0702]},
-        {en:"Dunedin", region:"Otago", p:1, coords:[-45.8788, 170.5028]},
-        {en:"Nelson", region:"Nelson", p:2, coords:[-41.2706, 173.2840]}
-        // 這裡可以繼續擴充到 100+
+        {en:"Auckland", p:1, coords:[-36.8485, 174.7633]},
+        {en:"Wellington", p:1, coords:[-41.2865, 174.7762]},
+        {en:"Christchurch", p:1, coords:[-43.5321, 172.6362]},
+        {en:"Hamilton", p:1, coords:[-37.7870, 175.2793]},
+        {en:"Dunedin", p:1, coords:[-45.8788, 170.5028]},
+        {en:"Queenstown", p:2, coords:[-45.0312, 168.6626]},
+        {en:"Rotorua", p:2, coords:[-38.1368, 176.2497]},
+        {en:"Napier", p:2, coords:[-39.4928, 176.9120]},
+        {en:"Taupo", p:2, coords:[-38.6857, 176.0702]},
+        {en:"Matamata", p:3, coords:[-37.8130, 175.7725]},
+        {en:"Milford Sound", p:3, coords:[-44.6414, 167.8974]},
+        {en:"Wanaka", p:3, coords:[-44.7032, 169.1321]},
+        {en:"Franz Josef", p:3, coords:[-43.3878, 170.1818]},
+        {en:"Nelson", p:2, coords:[-41.2706, 173.2840]},
+        {en:"Invercargill", p:1, coords:[-46.4131, 168.3538]}
     ];
 
     let cities=[], idx=0, score=0, currentClick=null, isAnswered=false;
     let pMarker=null, tMarker=null, line=null;
 
-    // KORU 圖騰 SVG
     const KORU_SVG = `<svg class="koru-svg" viewBox="0 0 100 100"><path d="M50 95C25.1472 95 5 74.8528 5 50C5 25.1472 25.1472 5 50 5C74.8528 5 95 25.1472 95 50C95 58 92 65 85 70C78 75 70 75 65 70C60 65 60 55 65 50C70 45 75 45 80 50C85 55 85 65 75 70" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round"/></svg>`;
 
     const map = L.map('map',{zoomControl:false, attributionControl:false}).setView([-40.9, 174.8], 6);
-    
-    // 【重點修正】使用帶有城市與街道標籤的底圖
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
 
     document.getElementById('citySlider').oninput = function() { document.getElementById('countDisplay').innerText = this.value; };
@@ -98,7 +114,7 @@
         document.getElementById('total').innerText = cities.length;
 
         const belt = document.getElementById('belt');
-        belt.innerHTML = cities.map(c => `<div class="city-card"><div class="koru-svg" style="color:var(--nz-green)">${KORU_SVG}</div><div class="city-name-en">${c.en}</div><div class="city-region">${c.region}</div></div>`).join('');
+        belt.innerHTML = cities.map(c => `<div class="city-card"><div class="koru-svg" style="color:var(--nz-green)">${KORU_SVG}</div><div class="city-name-en">${c.en}</div></div>`).join('');
         refreshRound();
     }
 
@@ -123,7 +139,7 @@
         if(isAnswered) return;
         currentClick = e.latlng;
         if(pMarker) map.removeLayer(pMarker);
-        pMarker = L.circleMarker(e.latlng, {radius:12, color:'#2F4F4F', fillColor: '#fff', weight:5, fillOpacity:1}).addTo(map);
+        pMarker = L.circleMarker(e.latlng, {radius:12, color: '#2F4F4F', fillColor: '#fff', weight:5, fillOpacity:1}).addTo(map);
         document.getElementById('confirmBtn').style.display = 'block';
     });
 
@@ -134,7 +150,7 @@
         const dist = map.distance(currentClick, target.coords) / 1000;
         const pts = Math.round(5000 * Math.pow(Math.E, -dist / 150));
         
-        tMarker = L.circleMarker(target.coords, {radius:12, color:'#2F4F4F', fillColor: '#E6B325', weight:5, fillOpacity:1}).addTo(map);
+        tMarker = L.circleMarker(target.coords, {radius:12, color: '#2F4F4F', fillColor: '#E6B325', weight:5, fillOpacity:1}).addTo(map);
         line = L.polyline([currentClick, target.coords], {color: '#2D5A27', weight:4, dashArray:'10,10'}).addTo(map);
         
         score += pts;
